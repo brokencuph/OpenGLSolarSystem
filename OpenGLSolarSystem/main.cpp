@@ -104,9 +104,9 @@ void init(GLFWwindow* window) {
 
 	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 12.0f;
 	setupVertices();
-	sunTexture = Utils::loadTexture("sunmap.jpg");
-	earthTexture = Utils::loadTexture("earth.jpg");
-	moonTexture = Utils::loadTexture("moon.jpg");
+	sunTexture = Utils::loadTexture(".\\textures\\sature.bmp");
+	earthTexture = Utils::loadTexture(".\\textures\\earth.bmp");
+	moonTexture = Utils::loadTexture(".\\textures\\moon.bmp");
 
 }
 

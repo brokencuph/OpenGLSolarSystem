@@ -338,3 +338,4 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+/OpenGLSolarSystem/shared/include/glm/out/build/x64-Debug (默认值)

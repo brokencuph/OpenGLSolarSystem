@@ -21,9 +21,9 @@ public:
 
 	GLuint getTextureObject();
 
-	constexpr glm::mat4 getScaleMatrix();
+	glm::mat4 getScaleMatrix();
 
-	constexpr glm::mat4 getTranslationMatrix(float time);
+	glm::mat4 getTranslationMatrix(float time);
 
 	Planet();
 

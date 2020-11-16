@@ -13,12 +13,12 @@ GLuint Planet::getTextureObject()
 	return Utils::loadTexture(texturePath.c_str());
 }
 
-constexpr glm::mat4 Planet::getScaleMatrix()
+glm::mat4 Planet::getScaleMatrix()
 {
 	return glm::scale(glm::mat4(1.0f), { scale, scale, scale });
 }
 
-constexpr glm::mat4 Planet::getTranslationMatrix(float time)
+glm::mat4 Planet::getTranslationMatrix(float time)
 {
 	return glm::translate(glm::mat4(1.0f),
 		{ trackRadius * cos(initialPhase + omega * time),
