@@ -10,10 +10,11 @@
 #include <glm\gtc\matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
 #include "Utils.h"
 #include "Sphere.h"
+#include "Planet.h"
 using namespace std;
 
 #define numVAOs 1
-#define numVBOs 2
+#define numVBOs 3
 
 float cameraX, cameraY, cameraZ;
 GLuint renderingProgram;
@@ -29,6 +30,10 @@ glm::mat4 pMat, vMat, mMat, mvMat;
 Sphere mySphere;
 
 stack<glm::mat4> mvStack;
+
+std::vector<Planet> myPlanets{
+	// parameters of different planets
+};
 
 void setupVertices(void) {
 	//float vertexPositions[108] =
@@ -56,9 +61,11 @@ void setupVertices(void) {
 	auto ind = mySphere.getIndices();
 	auto vert = mySphere.getVertices();
 	auto tex = mySphere.getTexCoords();
+	auto normals = mySphere.getNormals();
 
 	std::vector<float> pvalues;
 	std::vector<float> tvalues;
+	std::vector<float> nvalues;
 	
 	int numIndices = mySphere.getNumIndices();
 	for (int i = 0; i < numIndices; i++)
@@ -69,6 +76,10 @@ void setupVertices(void) {
 
 		tvalues.push_back((tex[ind[i]]).s);
 		tvalues.push_back((tex[ind[i]]).t);
+
+		nvalues.push_back((normals[ind[i]]).x);
+		nvalues.push_back((normals[ind[i]]).y);
+		nvalues.push_back((normals[ind[i]]).z);
 	}
 
 	glGenVertexArrays(1, vao);
@@ -79,13 +90,8 @@ void setupVertices(void) {
 	glBufferData(GL_ARRAY_BUFFER, pvalues.size() * sizeof(float), &pvalues[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, tvalues.size() * sizeof(float), &tvalues[0], GL_STATIC_DRAW);
-	for (float t : tvalues)
-	{
-		if (t < 0.0f || t > 1.0f)
-		{
-			cout << "error";
-		}
-	}
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
+	glBufferData(GL_ARRAY_BUFFER, nvalues.size() * sizeof(float), &nvalues[0], GL_STATIC_DRAW);
 }
 
 void init(GLFWwindow* window) {
