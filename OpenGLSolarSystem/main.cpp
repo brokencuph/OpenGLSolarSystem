@@ -12,6 +12,7 @@
 #include "Sphere.h"
 #include "Planet.h"
 using namespace std;
+using namespace std::string_literals;
 
 #define numVAOs 1
 #define numVBOs 3
@@ -20,7 +21,7 @@ float cameraX, cameraY, cameraZ;
 GLuint renderingProgram;
 GLuint vao[numVAOs];
 GLuint vbo[numVBOs];
-GLuint sunTexture, earthTexture, moonTexture;
+GLuint sunTexture, moonTexture;
 
 // variable allocation for display
 GLuint mvLoc, projLoc;
@@ -33,7 +34,18 @@ stack<glm::mat4> mvStack;
 
 std::vector<Planet> myPlanets{
 	// parameters of different planets
+	// trackRadius|scale|period|selfPeriod|initialPhase|texturePath
+	{4.0f, 0.7f, 5.0f, 20.0f, 0.0f, "textures/mercury.bmp"s},
+	{8.0f, 1.0f, 10.0f, 100.0f, 0.0f, "textures/venus.bmp"s},
+	
+	{16.0f, 0.7f, 30.0f, 5.14f, 0.0f, "textures/mars.bmp"s},
+	{31.0f, 5.0f, 177.0f, 2.07f, 0.0f, "textures/jupiter.bmp"s},
+	{46.0f, 5.0f, 300.0f, 2.238f, 0.0f, "textures/saturn.bmp"s},
+	{54.0f, 2.0f, 400.0f, 3.598f, 0.0f, "textures/uranus.bmp"s},
+	{62.0f, 2.0f, 500.0f, 3.368f, 0.0f, "textures/neptune.bmp"s}
 };
+
+Planet myEarth{ 12.0f, 1.0f, 15.0f, 5.0f, 0.0f, "textures/earth.bmp"s };
 
 void setupVertices(void) {
 	//float vertexPositions[108] =
@@ -102,12 +114,11 @@ void init(GLFWwindow* window) {
 	aspect = (float)width / (float)height;
 	pMat = glm::perspective(1.0472f, aspect, 0.1f, 1000.0f);
 
-	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 12.0f;
+	cameraX = 0.0f; cameraY = 5.0f; cameraZ = 20.0f;
 	setupVertices();
-	sunTexture = Utils::loadTexture(".\\textures\\sature.bmp");
-	earthTexture = Utils::loadTexture(".\\textures\\earth.bmp");
+	sunTexture = Utils::loadTexture(".\\textures\\sunmap.jpg");
 	moonTexture = Utils::loadTexture(".\\textures\\moon.bmp");
-
+	myEarth.selfAxis = glm::vec3(0.407f, 0.914f, 0.0f);
 }
 
 void display(GLFWwindow* window, double currentTime) {
@@ -119,8 +130,9 @@ void display(GLFWwindow* window, double currentTime) {
 
 	mvLoc = glGetUniformLocation(renderingProgram, "mv_matrix");
 	projLoc = glGetUniformLocation(renderingProgram, "proj_matrix");
-
-	vMat = glm::translate(glm::mat4(1.0f), glm::vec3(-cameraX, -cameraY, -cameraZ));
+	vMat = glm::rotate(glm::mat4(1.0f), 0.349f, glm::vec3(1.0f, 0.0f, 0.0f));
+	vMat = glm::translate(vMat, glm::vec3(-cameraX, -cameraY, -cameraZ));
+	// vMat = glm::lookAt(glm::vec3{ 0.0f, 5.0f, 72.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, -1.0f });
 	mvStack.push(vMat);
 
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
@@ -146,11 +158,36 @@ void display(GLFWwindow* window, double currentTime) {
 	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
 	mvStack.pop();
 
+	for (Planet& p : myPlanets) // go through 8 planets
+	{
+		mvStack.push(mvStack.top());
+		mvStack.top() *= p.getTranslationMatrix((float)currentTime);
+		mvStack.push(mvStack.top());
+		mvStack.top() *= p.getRotationMatrix((float)currentTime);
+		glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, p.getTextureObject());
+		glTextureParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTextureParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LEQUAL);
+		glEnable(GL_CULL_FACE);
+		glFrontFace(GL_CCW);
+		glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
+		mvStack.pop(); mvStack.pop();
+	}
+
 	//-----------------------  cube == planet  
 	mvStack.push(mvStack.top());
-	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime)*4.0, 0.0f, cos((float)currentTime)*4.0));
+	mvStack.top() *= myEarth.getTranslationMatrix((float)currentTime);
 	mvStack.push(mvStack.top());
-	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
+	mvStack.top() *= myEarth.getRotationMatrix((float)currentTime);
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
@@ -159,7 +196,7 @@ void display(GLFWwindow* window, double currentTime) {
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, earthTexture);
+	glBindTexture(GL_TEXTURE_2D, myEarth.getTextureObject());
 	glTextureParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTextureParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glEnable(GL_DEPTH_TEST);

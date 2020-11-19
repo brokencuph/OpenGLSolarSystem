@@ -176,6 +176,8 @@
     <Image Include="textures\neptune.bmp" />
     <Image Include="textures\pluto.bmp" />
     <Image Include="textures\saturn.bmp" />
+    <Image Include="textures\starfield2048.jpg" />
+    <Image Include="textures\sunmap.jpg" />
     <Image Include="textures\uranus.bmp" />
     <Image Include="textures\venus.bmp" />
   </ItemGroup>

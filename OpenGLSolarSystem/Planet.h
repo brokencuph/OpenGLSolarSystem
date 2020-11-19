@@ -10,14 +10,16 @@ struct Planet
 {
 private:
 	bool textureValid = false;
-	GLuint textureObject;
+	GLuint textureObject = 0u;
 	float omega;
 public:
 	float trackRadius;
 	float scale;
 	float period;
+	float selfPeriod;
 	float initialPhase;
 	std::string texturePath;
+	glm::vec3 selfAxis;
 
 	GLuint getTextureObject();
 
@@ -25,11 +27,14 @@ public:
 
 	glm::mat4 getTranslationMatrix(float time);
 
+	glm::mat4 getRotationMatrix(float time);
+
 	Planet();
 
 	Planet(float _trackRadius,
 		float _scale,
 		float _period,
+		float _selfPeriod,
 		float _initialPhase,
 		std::string _texturePath);
 };
