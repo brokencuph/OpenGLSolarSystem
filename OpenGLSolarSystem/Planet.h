@@ -13,6 +13,8 @@ private:
 	GLuint textureObject = 0u;
 	float omega;
 public:
+	static float omegaScale;
+
 	float trackRadius;
 	float scale;
 	float period;

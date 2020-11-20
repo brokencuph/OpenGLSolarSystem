@@ -4,6 +4,8 @@
 #include "Planet.h"
 #include <cmath>
 
+float Planet::omegaScale = 1.0f;
+
 GLuint Planet::getTextureObject()
 {
 	if (textureValid)
@@ -22,9 +24,9 @@ glm::mat4 Planet::getScaleMatrix()
 glm::mat4 Planet::getTranslationMatrix(float time)
 {
 	return glm::translate(glm::mat4(1.0f),
-		{ trackRadius * sin(initialPhase + omega * time),
+		{ trackRadius * sin(initialPhase + omega * time * omegaScale),
 		0,
-		trackRadius * cos(initialPhase + omega * time) });
+		trackRadius * cos(initialPhase + omega * time * omegaScale) });
 }
 
 Planet::Planet() : trackRadius(0.0f), scale(1.0f), period(1.0f), selfPeriod(1.0f),
@@ -35,7 +37,7 @@ Planet::Planet() : trackRadius(0.0f), scale(1.0f), period(1.0f), selfPeriod(1.0f
 
 glm::mat4 Planet::getRotationMatrix(float time)
 {
-	return glm::rotate(glm::mat4(1.0f), -time / selfPeriod * 6.28f, selfAxis);
+	return glm::rotate(glm::mat4(1.0f), -time / selfPeriod * 6.28f * omegaScale, selfAxis);
 }
 
 Planet::Planet(float _trackRadius,
