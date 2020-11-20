@@ -19,9 +19,10 @@ using namespace std::string_literals;
 
 float cameraX, cameraY, cameraZ;
 GLuint renderingProgram;
+GLuint starRenderingProgram;
 GLuint vao[numVAOs];
 GLuint vbo[numVBOs];
-GLuint sunTexture, moonTexture;
+GLuint sunTexture, moonTexture, starTexture;
 
 // variable allocation for display
 GLuint mvLoc, projLoc, nLoc;
@@ -29,6 +30,7 @@ GLuint globalAmbLoc, ambLoc, diffLoc, specLoc, posLoc;
 int width, height;
 float aspect;
 glm::mat4 pMat, vMat, mMat, mvMat, invTrMat;
+glm::vec3 newCamera;
 Sphere mySphere;
 
 stack<glm::mat4> mvStack;
@@ -36,17 +38,17 @@ stack<glm::mat4> mvStack;
 std::vector<Planet> myPlanets{
 	// parameters of different planets
 	// trackRadius|scale|period|selfPeriod|initialPhase|texturePath
-	{4.0f, 0.7f, 5.0f, 20.0f, 3.14f, "textures/mercury.bmp"s},
-	{8.0f, 1.0f, 10.0f, 100.0f, 3.14f, "textures/venus.bmp"s},
+	{2.5f, 0.38f, 5.0f, 20.0f, 3.14f, "textures/mercury.bmp"s},
+	{4.67f, 0.94f, 10.0f, 100.0f, 3.14f, "textures/venus.bmp"s},
 	
-	{16.0f, 0.7f, 30.0f, 5.14f, 3.14f, "textures/mars.bmp"s},
-	{24.0f, 5.0f, 177.0f, 2.07f, 3.14f, "textures/jupiter.bmp"s},
-	{32.0f, 5.0f, 300.0f, 2.238f, 3.14f, "textures/saturn.bmp"s},
-	{40.0f, 2.0f, 400.0f, 3.598f, 3.14f, "textures/uranus.bmp"s},
-	{48.0f, 2.0f, 500.0f, 3.368f, 3.14f, "textures/neptune.bmp"s}
+	{9.84f, 0.53f, 30.0f, 5.14f, 3.14f, "textures/mars.bmp"s},
+	{33.62f, 11.20f, 177.0f, 2.07f, 3.14f, "textures/jupiter.bmp"s},
+	{61.9f, 9.44f, 300.0f, 2.238f, 3.14f, "textures/saturn.bmp"s},
+	{124.03f, 4.0f, 400.0f, 3.598f, 3.14f, "textures/uranus.bmp"s},
+	{194.09f, 3.88f, 500.0f, 3.368f, 3.14f, "textures/neptune.bmp"s}
 };
 
-Planet myEarth{ 12.0f, 1.0f, 15.0f, 5.0f, 3.14f, "textures/earth.bmp"s };
+Planet myEarth{ 6.46f, 1.0f, 15.0f, 5.0f, 3.14f, "textures/earth.bmp"s };
 
 glm::vec3 transformed;
 glm::vec3 lightLoc(0.0f, 0.0f, 0.0f);
@@ -56,6 +58,9 @@ float globalAmbient[4] = { 0.7f, 0.7f, 0.7f, 1.0f };
 float lightAmbient[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 float lightDiffuse[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 float lightSpecular[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+float xrot = 0.0f;
+float yrot = 0.0f;
 
 void installLights(glm::mat4 vMatrix) {
 	transformed = glm::vec3(vMatrix * glm::vec4(lightLoc, 1.0));
@@ -140,16 +145,17 @@ void setupVertices(void) {
 
 void init(GLFWwindow* window) {
 	renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
-
+	starRenderingProgram = Utils::createShaderProgram("star_vertShader.glsl", "star_fragShader.glsl");
 
 	glfwGetFramebufferSize(window, &width, &height);
 	aspect = (float)width / (float)height;
 	pMat = glm::perspective(1.0472f, aspect, 0.1f, 1000.0f);
 
-	cameraX = 0.0f; cameraY = 5.0f; cameraZ = 20.0f;
+	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 20.0f;
 	setupVertices();
 	sunTexture = Utils::loadTexture(".\\textures\\sunmap.jpg");
 	moonTexture = Utils::loadTexture(".\\textures\\moon.bmp");
+	starTexture = Utils::loadTexture(".\\textures\\starfield2048.jpg");
 	myEarth.selfAxis = glm::vec3(0.407f, 0.914f, 0.0f);
 }
 
@@ -158,6 +164,31 @@ void display(GLFWwindow* window, double currentTime) {
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	glUseProgram(starRenderingProgram);
+	mvLoc = glGetUniformLocation(starRenderingProgram, "mv_matrix");
+	projLoc = glGetUniformLocation(starRenderingProgram, "proj_matrix");
+	newCamera = glm::rotate(glm::mat4(1.0f), -(float)currentTime / 10.0f + yrot, glm::vec3(0.0f, 1.0f, 0.0f))
+		* glm::rotate(glm::mat4(1.0f), xrot, glm::vec3(1.0f, 0.0f, 0.0f))
+		* glm::vec4(cameraX, cameraY, cameraZ, 1.0f);
+	vMat = glm::lookAt(newCamera, { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
+	mMat = glm::translate(glm::mat4(1.0f), newCamera);
+	mvMat = vMat * mMat;
+	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, starTexture);
+	glEnable(GL_CULL_FACE);
+	glFrontFace(GL_CW);
+	glDisable(GL_DEPTH_TEST);
+	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
+	glEnable(GL_DEPTH_TEST);
+
 	glUseProgram(renderingProgram);
 
 	mvLoc = glGetUniformLocation(renderingProgram, "mv_matrix");
@@ -165,7 +196,7 @@ void display(GLFWwindow* window, double currentTime) {
 	nLoc = glGetUniformLocation(renderingProgram, "norm_matrix");
 	// vMat = glm::rotate(glm::mat4(1.0f), 0.349f, glm::vec3(1.0f, 0.0f, 0.0f));
 	// vMat = glm::translate(vMat, glm::vec3(-cameraX, -cameraY, -cameraZ));
-	vMat = glm::lookAt(glm::vec3{ cameraX, cameraY, cameraZ }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
+	// vMat = glm::lookAt(glm::vec3{ cameraX, cameraY, cameraZ }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
 	installLights(vMat);
 	mvStack.push(vMat);
 
@@ -176,6 +207,7 @@ void display(GLFWwindow* window, double currentTime) {
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 	mvStack.push(mvStack.top());
 	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(1.0, 0.0, 0.0));
+	mvStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 0.5f));
 	invTrMat = glm::transpose(glm::inverse(mvStack.top()));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 	glUniformMatrix4fv(nLoc, 1, GL_FALSE, glm::value_ptr(invTrMat));
@@ -195,7 +227,6 @@ void display(GLFWwindow* window, double currentTime) {
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
 	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
-	Utils::checkOpenGLError();
 	mvStack.pop();
 
 	for (Planet& p : myPlanets) // go through 8 planets
@@ -204,6 +235,8 @@ void display(GLFWwindow* window, double currentTime) {
 		mvStack.top() *= p.getTranslationMatrix((float)currentTime);
 		mvStack.push(mvStack.top());
 		mvStack.top() *= p.getRotationMatrix((float)currentTime);
+		mvStack.push(mvStack.top());
+		mvStack.top() *= p.getScaleMatrix();
 		invTrMat = glm::transpose(glm::inverse(mvStack.top()));
 		glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 		glUniformMatrix4fv(nLoc, 1, GL_FALSE, glm::value_ptr(invTrMat));
@@ -225,7 +258,7 @@ void display(GLFWwindow* window, double currentTime) {
 		glEnable(GL_CULL_FACE);
 		glFrontFace(GL_CCW);
 		glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
-		mvStack.pop(); mvStack.pop();
+		mvStack.pop(); mvStack.pop(); mvStack.pop();
 	}
 
 	//-----------------------  cube == planet  
@@ -258,8 +291,7 @@ void display(GLFWwindow* window, double currentTime) {
 
 	//-----------------------  smaller cube == moon
 	mvStack.push(mvStack.top());
-	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, sin((float)currentTime)*2.0, cos((float)currentTime)*2.0));
-	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 0.0, 1.0));
+	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 1.6f, 0.0f, cos((float)currentTime)*1.6f));
 	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.25f, 0.25f, 0.25f));
 	invTrMat = glm::transpose(glm::inverse(mvStack.top()));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
@@ -292,30 +324,46 @@ void window_size_callback(GLFWwindow* win, int newWidth, int newHeight) {
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	const double new_cameraZ = cameraZ - yoffset;
+	const double new_cameraZ = cameraZ - 5.0 * yoffset;
 	if (new_cameraZ > 1.0)
-		cameraZ = new_cameraZ;
+		cameraZ = (float)new_cameraZ;
 }
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+bool button_left_state = false; // whether the button is pressed
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mode)
 {
-	if (action == GLFW_RELEASE)
+	if (button == GLFW_MOUSE_BUTTON_LEFT)
 	{
-		return;
-	}
-	if (key == GLFW_KEY_EQUAL)
-	{
-		const float newScale = Planet::omegaScale + 0.1f;
-		Planet::omegaScale = newScale;
-	}
-	else if (key == GLFW_KEY_MINUS)
-	{
-		const float newScale = Planet::omegaScale - 0.1f;
-		if (newScale >= 0)
+		if (action == GLFW_PRESS)
 		{
-			Planet::omegaScale = newScale;
+			button_left_state = true;
+		}
+		else
+		{
+			button_left_state = false;
 		}
 	}
+}
+
+double prev_xpos, prev_ypos;
+
+void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	if (!button_left_state)
+	{
+		prev_xpos = xpos;
+		prev_ypos = ypos;
+		return;
+	}
+	double delta_y = ypos - prev_ypos;
+	double delta_x = xpos - prev_xpos;
+	float new_xrot = xrot + delta_y * (3.14 / 180.0);
+	if (new_xrot > -1.5 && new_xrot < 1.5)
+		xrot = new_xrot;
+	yrot += -delta_x * (3.14 / 180.0);
+	prev_xpos = xpos;
+	prev_ypos = ypos;
 }
 
 int main(void) {
@@ -329,10 +377,11 @@ int main(void) {
 
 	glfwSetWindowSizeCallback(window, window_size_callback);
 	glfwSetScrollCallback(window, scroll_callback);
-	glfwSetKeyCallback(window, key_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
+	glfwSetCursorPosCallback(window, cursor_position_callback);
 
 	init(window);
-
+	glfwGetCursorPos(window, &prev_xpos, &prev_ypos);
 	double lastTime = glfwGetTime();
 
 	while (!glfwWindowShouldClose(window)) {

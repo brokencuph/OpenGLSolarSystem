@@ -154,6 +154,8 @@
   <ItemGroup>
     <None Include="fragShader.glsl" />
     <None Include="glew32.dll" />
+    <None Include="star_fragShader.glsl" />
+    <None Include="star_vertShader.glsl" />
     <None Include="vertShader.glsl" />
   </ItemGroup>
   <ItemGroup>

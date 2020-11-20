@@ -29,6 +29,12 @@
     <None Include="vertShader.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="star_vertShader.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="star_fragShader.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
