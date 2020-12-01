@@ -39,7 +39,7 @@ void RingSurface::init() {
 		vertices[2 * i + 1] = glm::vec3(xo, 0, zo);
 		texCoords[2 * i] = glm::vec2((float)i / prec, 0.0f);
 		texCoords[2 * i + 1] = glm::vec2((float)i / prec, 1.0f);
-		normals[2 * i] = normals[2 * i + 1] = glm::vec3(0.0f, 1.0f, 0.0f);
+		normals[2 * i] = normals[2 * i + 1] = glm::vec3(0.0f, -1.0f, 0.0f);
 		// tangents not needed, so omitted
 	}
 	// calculate triangle indices

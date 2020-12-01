@@ -11,11 +11,12 @@
 #include "Utils.h"
 #include "Sphere.h"
 #include "Planet.h"
+#include "RingSurface.h"
 using namespace std;
 using namespace std::string_literals;
 
 #define numVAOs 1
-#define numVBOs 3
+#define numVBOs 6
 
 float cameraX, cameraY, cameraZ;
 GLuint renderingProgram;
@@ -32,6 +33,7 @@ float aspect;
 glm::mat4 pMat, vMat, mMat, mvMat, invTrMat;
 glm::vec3 newCamera;
 Sphere mySphere;
+RingSurface myRing(12.0f, 3.0f, 48);
 
 stack<glm::mat4> mvStack;
 
@@ -141,6 +143,39 @@ void setupVertices(void) {
 	glBufferData(GL_ARRAY_BUFFER, tvalues.size() * sizeof(float), &tvalues[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
 	glBufferData(GL_ARRAY_BUFFER, nvalues.size() * sizeof(float), &nvalues[0], GL_STATIC_DRAW);
+
+	// for the Ring
+	ind = myRing.getIndices();
+	vert = myRing.getVertices();
+	tex = myRing.getTexCoords();
+	normals = myRing.getNormals();
+
+	pvalues.clear();
+	tvalues.clear();
+	nvalues.clear();
+
+	numIndices = myRing.getNumIndices();
+	for (int i = 0; i < numIndices; i++)
+	{
+		pvalues.push_back((vert[ind[i]]).x);
+		pvalues.push_back((vert[ind[i]]).y);
+		pvalues.push_back((vert[ind[i]]).z);
+
+		tvalues.push_back((tex[ind[i]]).s);
+		tvalues.push_back((tex[ind[i]]).t);
+
+		nvalues.push_back((normals[ind[i]]).x);
+		nvalues.push_back((normals[ind[i]]).y);
+		nvalues.push_back((normals[ind[i]]).z);
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[3]);
+	glBufferData(GL_ARRAY_BUFFER, pvalues.size() * sizeof(float), &pvalues[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[4]);
+	glBufferData(GL_ARRAY_BUFFER, tvalues.size() * sizeof(float), &tvalues[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[5]);
+	glBufferData(GL_ARRAY_BUFFER, nvalues.size() * sizeof(float), &nvalues[0], GL_STATIC_DRAW);
+
 }
 
 void init(GLFWwindow* window) {
@@ -229,8 +264,11 @@ void display(GLFWwindow* window, double currentTime) {
 	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
 	mvStack.pop();
 
-	for (Planet& p : myPlanets) // go through 8 planets
+	for (size_t i = 0; i < myPlanets.size(); i++)
 	{
+		auto& p = myPlanets[i];
+
+		// prepare matrices for the planet to draw
 		mvStack.push(mvStack.top());
 		mvStack.top() *= p.getTranslationMatrix((float)currentTime);
 		mvStack.push(mvStack.top());
@@ -258,7 +296,38 @@ void display(GLFWwindow* window, double currentTime) {
 		glEnable(GL_CULL_FACE);
 		glFrontFace(GL_CCW);
 		glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
-		mvStack.pop(); mvStack.pop(); mvStack.pop();
+		
+		if (i == 4) // draw the Saturn ring
+		{
+			mvStack.pop(); mvStack.pop();
+			mvStack.top() *= glm::rotate(glm::mat4(1.0f), 3.14f / 4, glm::vec3(-1.0f, 0.0f, 0.0f));
+			invTrMat = glm::transpose(glm::inverse(mvStack.top()));
+			glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
+			glUniformMatrix4fv(nLoc, 1, GL_FALSE, glm::value_ptr(invTrMat));
+			glBindBuffer(GL_ARRAY_BUFFER, vbo[3]);
+			glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+			glEnableVertexAttribArray(0);
+			glBindBuffer(GL_ARRAY_BUFFER, vbo[4]);
+			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(1);
+			glBindBuffer(GL_ARRAY_BUFFER, vbo[5]);
+			glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(2);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, p.getTextureObject());
+			glTextureParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTextureParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glEnable(GL_DEPTH_TEST);
+			glDepthFunc(GL_LEQUAL);
+			glDisable(GL_CULL_FACE); // we need both faces
+			glDrawArrays(GL_TRIANGLES, 0, myRing.getNumIndices());
+			mvStack.pop();
+		}
+		else
+		{
+			mvStack.pop(); mvStack.pop(); mvStack.pop();
+		}
+
 	}
 
 	//-----------------------  cube == planet  
@@ -370,7 +439,7 @@ int main(void) {
 	if (!glfwInit()) { exit(EXIT_FAILURE); }
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	GLFWwindow* window = glfwCreateWindow(600, 600, "Chapter 4 - program 4", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(1024, 768, "Project - Solar System", NULL, NULL);
 	glfwMakeContextCurrent(window);
 	if (glewInit() != GLEW_OK) { exit(EXIT_FAILURE); }
 	glfwSwapInterval(1);
@@ -387,7 +456,8 @@ int main(void) {
 	while (!glfwWindowShouldClose(window)) {
 		double currentTime = glfwGetTime();
 		display(window, currentTime);
-		if (currentTime - lastTime > 0.03)
+		//if (currentTime - lastTime > 0.03)
+		// this is to optimize performance for low-end computers
 		{
 			lastTime = currentTime;
 			glfwSwapBuffers(window);
