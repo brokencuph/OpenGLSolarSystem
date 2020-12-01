@@ -49,6 +49,9 @@
     <ClCompile Include="Planet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RingSurface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Sphere.h">
@@ -58,6 +61,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Planet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RingSurface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
