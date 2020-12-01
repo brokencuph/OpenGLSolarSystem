@@ -87,28 +87,6 @@ void installLights(glm::mat4 vMatrix) {
 }
 
 void setupVertices(void) {
-	//float vertexPositions[108] =
-	//{ -1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f,
-	//	1.0f, -1.0f, -1.0f, 1.0f,  1.0f, -1.0f, -1.0f,  1.0f, -1.0f,
-	//	1.0f, -1.0f, -1.0f, 1.0f, -1.0f,  1.0f, 1.0f,  1.0f, -1.0f,
-	//	1.0f, -1.0f,  1.0f, 1.0f,  1.0f,  1.0f, 1.0f,  1.0f, -1.0f,
-	//	1.0f, -1.0f,  1.0f, -1.0f, -1.0f,  1.0f, 1.0f,  1.0f,  1.0f,
-	//	-1.0f, -1.0f,  1.0f, -1.0f,  1.0f,  1.0f, 1.0f,  1.0f,  1.0f,
-	//	-1.0f, -1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f,  1.0f,
-	//	-1.0f, -1.0f, -1.0f, -1.0f,  1.0f, -1.0f, -1.0f,  1.0f,  1.0f,
-	//	-1.0f, -1.0f,  1.0f,  1.0f, -1.0f,  1.0f,  1.0f, -1.0f, -1.0f,
-	//	1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f,
-	//	-1.0f,  1.0f, -1.0f, 1.0f,  1.0f, -1.0f, 1.0f,  1.0f,  1.0f,
-	//	1.0f,  1.0f,  1.0f, -1.0f,  1.0f,  1.0f, -1.0f,  1.0f, -1.0f
-	//};
-	//float pyramidPositions[54] =
-	//{ -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f,    //front
-	//	1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f,    //right
-	//	1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f,  //back
-	//	-1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f,  //left
-	//	-1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, //LF
-	//	1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f  //RR
-	//};
 	auto ind = mySphere.getIndices();
 	auto vert = mySphere.getVertices();
 	auto tex = mySphere.getTexCoords();
@@ -191,7 +169,7 @@ void init(GLFWwindow* window) {
 	sunTexture = Utils::loadTexture(".\\textures\\sunmap.jpg");
 	moonTexture = Utils::loadTexture(".\\textures\\moon.bmp");
 	starTexture = Utils::loadTexture(".\\textures\\starfield2048.jpg");
-	myEarth.selfAxis = glm::vec3(0.407f, 0.914f, 0.0f);
+	myEarth.selfAxis = glm::vec3(0.407f, 0.914f, 0.0f); // set the self rotation axis of the Earth
 }
 
 void display(GLFWwindow* window, double currentTime) {
@@ -199,14 +177,16 @@ void display(GLFWwindow* window, double currentTime) {
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	// draw the star sphere
 	glUseProgram(starRenderingProgram);
 	mvLoc = glGetUniformLocation(starRenderingProgram, "mv_matrix");
 	projLoc = glGetUniformLocation(starRenderingProgram, "proj_matrix");
+	// calculate camera position, and use look-at matrix as the view matrix
 	newCamera = glm::rotate(glm::mat4(1.0f), -(float)currentTime / 10.0f + yrot, glm::vec3(0.0f, 1.0f, 0.0f))
 		* glm::rotate(glm::mat4(1.0f), xrot, glm::vec3(1.0f, 0.0f, 0.0f))
 		* glm::vec4(cameraX, cameraY, cameraZ, 1.0f);
 	vMat = glm::lookAt(newCamera, { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
-	mMat = glm::translate(glm::mat4(1.0f), newCamera);
+	mMat = glm::translate(glm::mat4(1.0f), newCamera); // position for star sphere
 	mvMat = vMat * mMat;
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
@@ -224,6 +204,7 @@ void display(GLFWwindow* window, double currentTime) {
 	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
 	glEnable(GL_DEPTH_TEST);
 
+	// switch to main rendering program
 	glUseProgram(renderingProgram);
 
 	mvLoc = glGetUniformLocation(renderingProgram, "mv_matrix");
@@ -237,7 +218,7 @@ void display(GLFWwindow* window, double currentTime) {
 
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
 
-	// ----------------------  pyramid == sun
+	// ----------------------  draw the sun sphere
 	mvStack.push(mvStack.top());
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 	mvStack.push(mvStack.top());
@@ -264,6 +245,7 @@ void display(GLFWwindow* window, double currentTime) {
 	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
 	mvStack.pop();
 
+	// draw planets defined in myPlanets (not including the Earth)
 	for (size_t i = 0; i < myPlanets.size(); i++)
 	{
 		auto& p = myPlanets[i];
@@ -330,7 +312,7 @@ void display(GLFWwindow* window, double currentTime) {
 
 	}
 
-	//-----------------------  cube == planet  
+	//-----------------------  draw the Earth
 	mvStack.push(mvStack.top());
 	mvStack.top() *= myEarth.getTranslationMatrix((float)currentTime);
 	mvStack.push(mvStack.top());
@@ -358,7 +340,7 @@ void display(GLFWwindow* window, double currentTime) {
 	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
 	mvStack.pop();
 
-	//-----------------------  smaller cube == moon
+	//-----------------------  draw the moon
 	mvStack.push(mvStack.top());
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 1.6f, 0.0f, cos((float)currentTime)*1.6f));
 	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.25f, 0.25f, 0.25f));
@@ -444,13 +426,14 @@ int main(void) {
 	if (glewInit() != GLEW_OK) { exit(EXIT_FAILURE); }
 	glfwSwapInterval(1);
 
+	// bind window event handlers
 	glfwSetWindowSizeCallback(window, window_size_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetCursorPosCallback(window, cursor_position_callback);
 
 	init(window);
-	glfwGetCursorPos(window, &prev_xpos, &prev_ypos);
+	glfwGetCursorPos(window, &prev_xpos, &prev_ypos); // get initial cursor position
 	double lastTime = glfwGetTime();
 
 	while (!glfwWindowShouldClose(window)) {
