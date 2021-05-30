@@ -1,7 +1,7 @@
 #include <cmath>
 #include <vector>
 #include <iostream>
-#include <glm\glm.hpp>
+#include <glm/glm.hpp>
 #include "RingSurface.h"
 using namespace std;
 
@@ -59,4 +59,4 @@ std::vector<int> RingSurface::getIndices() { return indices; }
 std::vector<glm::vec3> RingSurface::getVertices() { return vertices; }
 std::vector<glm::vec2> RingSurface::getTexCoords() { return texCoords; }
 std::vector<glm::vec3> RingSurface::getNormals() { return normals; }
-std::vector<glm::vec3> RingSurface::getTangents() { throw std::exception("Not implemented!"); }
+std::vector<glm::vec3> RingSurface::getTangents() { throw std::exception(); }

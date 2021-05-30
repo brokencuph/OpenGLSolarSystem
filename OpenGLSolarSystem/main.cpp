@@ -1,13 +1,13 @@
-#include <GL\glew.h>
-#include <GLFW\glfw3.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <cmath>
 #include <stack>
-#include <glm\glm.hpp>
-#include <glm\gtc\type_ptr.hpp> // glm::value_ptr
-#include <glm\gtc\matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp> // glm::value_ptr
+#include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
 #include "Utils.h"
 #include "Sphere.h"
 #include "Planet.h"
@@ -166,9 +166,9 @@ void init(GLFWwindow* window) {
 
 	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 20.0f;
 	setupVertices();
-	sunTexture = Utils::loadTexture(".\\textures\\sunmap.jpg");
-	moonTexture = Utils::loadTexture(".\\textures\\moon.bmp");
-	starTexture = Utils::loadTexture(".\\textures\\starfield2048.jpg");
+	sunTexture = Utils::loadTexture("./textures/sunmap.jpg");
+	moonTexture = Utils::loadTexture("./textures/moon.bmp");
+	starTexture = Utils::loadTexture("./textures/starfield2048.jpg");
 	myEarth.selfAxis = glm::vec3(0.407f, 0.914f, 0.0f); // set the self rotation axis of the Earth
 }
 

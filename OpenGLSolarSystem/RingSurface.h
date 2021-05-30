@@ -1,6 +1,6 @@
 #include <cmath>
 #include <vector>
-#include <glm\glm.hpp>
+#include <glm/glm.hpp>
 class RingSurface
 {
 private:
